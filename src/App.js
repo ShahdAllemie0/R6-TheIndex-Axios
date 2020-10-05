@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-import authors from "./data.js";
 // Components
 import Sidebar from "./Sidebar";
 import AuthorList from "./AuthorList";
@@ -8,8 +8,26 @@ import AuthorDetail from "./AuthorDetail";
 
 const App = () => {
   const [currentAuthor, setCurrentAuthor] = useState(null);
+  const [authors, setAuthors] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const selectAuthor = author => setCurrentAuthor(author);
+  useEffect(() => {
+    getauthors();
+  }, []);
+
+  const selectAuthor = async (authorID) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://the-index-api.herokuapp.com/api/authors/${authorID.id}/`
+      );
+      const author = response.data;
+      setCurrentAuthor(author);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const unselectAuthor = () => setCurrentAuthor(null);
 
@@ -17,7 +35,24 @@ const App = () => {
     if (currentAuthor) {
       return <AuthorDetail author={currentAuthor} />;
     } else {
-      return <AuthorList authors={authors} selectAuthor={selectAuthor} />;
+      if (loading) {
+        return <h1>loading</h1>;
+      } else {
+        return <AuthorList authors={authors} selectAuthor={selectAuthor} />;
+      }
+    }
+  };
+
+  const getauthors = async () => {
+    try {
+      const response = await axios.get(
+        "https://the-index-api.herokuapp.com/api/authors/"
+      );
+      const fetchAuthors = response.data;
+      setAuthors(fetchAuthors);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
     }
   };
 
